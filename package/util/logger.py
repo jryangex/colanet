@@ -5,13 +5,14 @@ import numpy as np
 from termcolor import colored
 from .rank_filter import rank_filter
 from .path import mkdir
-
+import colorama
 
 class Logger:
     def __init__(self, local_rank, save_dir='./', use_tensorboard=True):
+        colorama.init()
         mkdir(local_rank, save_dir)
         self.rank = local_rank
-        fmt = colored('[%(name)s]', 'magenta', attrs=['bold']) + colored('[%(asctime)s]', 'blue') + \
+        fmt = colored('[%(asctime)s]', 'yellow') + \
               colored('%(levelname)s:', 'green') + colored('%(message)s', 'white')
         logging.basicConfig(level=logging.INFO,
                             filename=os.path.join(save_dir, 'logs.txt'),

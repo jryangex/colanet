@@ -94,7 +94,7 @@ class NanoDetHead(GFLHead):
         for m in self.reg_convs.modules():
             if isinstance(m, nn.Conv2d):
                 normal_init(m, std=0.01)
-        bias_cls = -4.595  # 用0.01的置信度初始化
+        bias_cls = -4.595
         for i in range(len(self.strides)):
             normal_init(self.gfl_cls[i], std=0.01, bias=bias_cls)
             normal_init(self.gfl_reg[i], std=0.01)

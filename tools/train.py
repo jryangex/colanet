@@ -1,4 +1,4 @@
-# Copyright 2021 RangiLyu.
+# Copyright 2021 colaYang.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import numpy as np
 import warnings
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ProgressBar
-
+warnings.simplefilter("ignore", UserWarning)
 from nanodet.util import mkdir, Logger, cfg, load_config, convert_old_model
 from nanodet.data.collate import collate_function
 from nanodet.data.dataset import build_dataset
@@ -84,7 +84,9 @@ def main(args):
                          max_epochs=cfg.schedule.total_epochs,
                          gpus=cfg.device.gpu_ids,
                          check_val_every_n_epoch=cfg.schedule.val_intervals,
-                         accelerator='ddp',
+                         accelerator='dp',
+                         amp_backend='apex', amp_level=cfg.device.amp_level,
+                         #precision=16,
                          log_every_n_steps=cfg.log.interval,
                          num_sanity_val_steps=0,
                          resume_from_checkpoint=model_resume_path,

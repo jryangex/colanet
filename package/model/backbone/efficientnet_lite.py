@@ -90,7 +90,7 @@ class MBConvBlock(nn.Module):
         # Output phase
         self._project_conv = nn.Conv2d(in_channels=oup, out_channels=final_oup, kernel_size=1, bias=False)
         self._bn2 = nn.BatchNorm2d(num_features=final_oup, momentum=self._momentum, eps=self._epsilon)
-        self._relu = act_layers(activation)
+        self._relu = act_layers(activation) # choose the activation function
 
     def forward(self, x, drop_connect_rate=None):
         """

@@ -3,20 +3,24 @@ from pycocotools.cocoeval import COCOeval
 import json
 import os
 import copy
+import pickle
+from json import dumps, loads, JSONEncoder, JSONDecoder
+import torch 
 
 
-def xyxy2xywh(bbox):
-    """
-    change bbox to coco format
-    :param bbox: [x1, y1, x2, y2]
-    :return: [x, y, w, h]
-    """
-    return [
-        bbox[0],
-        bbox[1],
-        bbox[2] - bbox[0],
-        bbox[3] - bbox[1],
-    ]
+
+class PythonObjectEncoder(JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, (list, dict, str, int, float, bool, type(None))):
+                return JSONEncoder.default(self, obj)
+            return {'_python_object':pickle.dumps(obj)}
+
+def as_python_object(dct):
+    if '_python_object' in dct:
+        return pickle.loads(str(dct['_python_object']))
+    return dct
+
+
 
 
 class CocoDetectionEvaluator:
@@ -25,6 +29,19 @@ class CocoDetectionEvaluator:
         self.coco_api = dataset.coco_api
         self.cat_ids = dataset.cat_ids
         self.metric_names = ['mAP', 'AP_50', 'AP_75', 'AP_small', 'AP_m', 'AP_l']
+        
+    def xyxy2xywh(bbox):
+        """
+        change bbox to coco format
+        :param bbox: [x1, y1, x2, y2]
+        :return: [x, y, w, h]
+        """
+        return [
+                bbox[0].item(),
+                bbox[1].item(),
+                bbox[2].item() - bbox[0].item(),
+                bbox[3].item() - bbox[1].item(),
+        ]
 
     def results2json(self, results):
         """
@@ -43,7 +60,7 @@ class CocoDetectionEvaluator:
                     detection = dict(
                         image_id=int(image_id),
                         category_id=int(category_id),
-                        bbox=xyxy2xywh(bbox),
+                        bbox=self.xyxy2xywh(bbox),
                         score=score)
                     json_results.append(detection)
         return json_results
