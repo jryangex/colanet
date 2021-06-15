@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 from pycocotools.coco import COCO
 from .base import BaseDataset
+from tqdm import tqdm 
 
 
 class CocoDataset(BaseDataset):
@@ -100,7 +101,18 @@ class CocoDataset(BaseDataset):
             else:
                 annotation['keypoints'] = np.zeros((0, 51), dtype=np.float32)
         return annotation
-
+    def get_all_img(self):
+        print("read all image ")
+        imgarray = []
+        for i in tqdm(range(len(self.data_info))):
+            img_info = self.data_info[i]
+            file_name = img_info['file_name']
+           
+            image_path = os.path.join(self.img_path, file_name)
+            img = cv2.imread(image_path)
+            imgarray.append(img)
+        return imgarray
+            
     def get_train_data(self, idx):
         """
         Load image and annotation
@@ -108,9 +120,15 @@ class CocoDataset(BaseDataset):
         :return: meta-data (a dict containing image, annotation and other information)
         """
         img_info = self.get_per_img_info(idx)
-        file_name = img_info['file_name']
-        image_path = os.path.join(self.img_path, file_name)
-        img = cv2.imread(image_path)
+        
+        
+        if self.readall is True:
+            img = self.preloadimg[idx]  #M
+        else:
+            file_name = img_info['file_name']
+            image_path = os.path.join(self.img_path, file_name)
+            img = cv2.imread(image_path)
+        
         if img is None:
             print('image {} read failed.'.format(image_path))
             raise FileNotFoundError('Cant load image! Please check image path!')

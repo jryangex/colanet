@@ -21,7 +21,7 @@ import logging
 
 from pytorch_lightning import LightningModule
 from typing import Any, List
-from nanodet.util import mkdir, gather_results
+from package.util import mkdir, gather_results
 
 from ..model.arch import build_model
 

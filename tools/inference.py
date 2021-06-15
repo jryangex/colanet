@@ -3,9 +3,9 @@ import cv2
 import time
 import torch
 
-from nanodet.model.arch import build_model
-from nanodet.util import load_model_weight
-from nanodet.data.transform import Pipeline
+from package.model.arch import build_model
+from package.util import load_model_weight
+from package.data.transform import Pipeline
 
 
 class Predictor(object):
@@ -19,7 +19,7 @@ class Predictor(object):
             deploy_config = cfg.model
             deploy_config.arch.backbone.update({'deploy': True})
             deploy_model = build_model(deploy_config)
-            from nanodet.model.backbone.repvgg import repvgg_det_model_convert
+            from package.model.backbone.repvgg import repvgg_det_model_convert
             model = repvgg_det_model_convert(model, deploy_model)
         self.model = model.to(device).eval()
         self.pipeline = Pipeline(cfg.data.val.pipeline, cfg.data.val.keep_ratio)

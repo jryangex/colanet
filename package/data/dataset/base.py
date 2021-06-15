@@ -31,6 +31,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
                  ann_path,
                  input_size,
                  pipeline,
+                 readall=False,
                  keep_ratio=True,
                  use_instance_mask=False,
                  use_seg_mask=False,
@@ -48,8 +49,10 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         self.use_keypoint = use_keypoint
         self.load_mosaic = load_mosaic
         self.mode = mode
-
+        self.readall = readall
         self.data_info = self.get_data_info(ann_path)
+        if readall is True:
+             self.preloadimg = self.get_all_img()  #M
 
     def __len__(self):
         return len(self.data_info)
@@ -67,7 +70,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
 
     @abstractmethod
     def get_data_info(self, ann_path):
-        pass
+        pass 
 
     @abstractmethod
     def get_train_data(self, idx):

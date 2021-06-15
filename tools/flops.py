@@ -1,6 +1,6 @@
 import torch
-from nanodet.model.arch import build_model
-from nanodet.util import cfg, load_config, get_model_complexity_info
+from package.model.arch import build_model
+from package.util import cfg, load_config, get_model_complexity_info
 
 
 def main(config, input_shape=(3, 320, 320)):

@@ -2,7 +2,7 @@ import os
 import copy
 import warnings
 import torch
-from nanodet.util import mkdir, DataParallel, load_model_weight, save_model, MovingAverage, AverageMeter
+from package.util import mkdir, DataParallel, load_model_weight, save_model, MovingAverage, AverageMeter
 
 
 class Trainer:
@@ -96,7 +96,7 @@ class Trainer:
                     step_losses[k].push(loss_stats[k].mean().item())
 
             if iter_id % self.cfg.log.interval == 0:
-                log_msg = '{}|Epoch{}/{}|Iter{}({}/{})| lr:{:.2e}| '.format(mode, epoch, self.cfg.schedule.total_epochs,
+                log_msg = '{} | Epoch {} / {}|Iter{}(id{}/num{})| lr:{:.2e}| '.format(mode, epoch, self.cfg.schedule.total_epochs,
                     self._iter, iter_id, num_iters, self.optimizer.param_groups[0]['lr'])
                 for l in step_losses:
                     log_msg += '{}:{:.4f}| '.format(l, step_losses[l].avg())

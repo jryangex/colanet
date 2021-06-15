@@ -1,4 +1,4 @@
-# Copyright 2021 RangiLyu.
+# Copyright 2021 colaYang.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ import os
 import argparse
 import torch
 
-from nanodet.util import convert_old_model
+from package.util import convert_old_model
 
 
 def parse_args():

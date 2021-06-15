@@ -1,4 +1,4 @@
-# Copyright 2021 RangiLyu.
+# Copyright 2021 colaYang.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,11 +20,11 @@ import argparse
 import warnings
 import pytorch_lightning as pl
 
-from nanodet.util import mkdir, Logger, cfg, load_config, convert_old_model
-from nanodet.data.collate import collate_function
-from nanodet.data.dataset import build_dataset
-from nanodet.trainer.task import TrainingTask
-from nanodet.evaluator import build_evaluator
+from package.util import mkdir, Logger, cfg, load_config, convert_old_model
+from package.data.collate import collate_function
+from package.data.dataset import build_dataset
+from package.trainer.task import TrainingTask
+from package.evaluator import build_evaluator
 
 
 def parse_args():
@@ -69,7 +69,7 @@ def main(args):
 
     trainer = pl.Trainer(default_root_dir=cfg.save_dir,
                          gpus=cfg.device.gpu_ids,
-                         accelerator='ddp',
+                         accelerator='dp',
                          log_every_n_steps=cfg.log.interval,
                          num_sanity_val_steps=0,
                          )

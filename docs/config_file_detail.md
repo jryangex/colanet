@@ -57,7 +57,7 @@ NanoDet using modified [PAN](http://arxiv.org/abs/1803.01534) (replace downsampl
 
 ```yaml
 head:
-    name: NanoDetHead
+    name: ColanetHead
     num_classes: 80
     input_channel: 96
     feat_channels: 96

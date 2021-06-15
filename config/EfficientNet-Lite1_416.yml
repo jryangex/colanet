@@ -1,30 +1,32 @@
-#Config File example
-save_dir: workspace/nanodet_m
+save_dir: log/efficient1_416_SGD_cosine
 model:
   arch:
     name: OneStageDetector
     backbone:
-      name: ShuffleNetV2
-      model_size: 1.0x
-      out_stages: [2,3,4]
-      activation: LeakyReLU
+      name: EfficientNetLite
+      model_name: efficientnet_lite1
+      out_stages: [2,4,6]
+      activation: SiLU
+      pretrain: True
     fpn:
       name: PAN
-      in_channels: [116, 232, 464]
-      out_channels: 96
+      in_channels: [40, 112, 320]
+      out_channels: 128
       start_level: 0
       num_outs: 3
     head:
-      name: ColanetHead
+      name: ColanetHead  #or use GFLHead
       num_classes: 80
-      input_channel: 96
-      feat_channels: 96
-      stacked_convs: 2
+      input_channel: 128
+      feat_channels: 128
+      stacked_convs: 3
+      activation: SiLU
+      # silu(x)=x∗σ(x),where σ(x) is the logistic sigmoid.
       share_cls_reg: True
-      octave_base_scale: 5
+      octave_base_scale: 8
       scales_per_octave: 1
       strides: [8, 16, 32]
-      reg_max: 7
+      reg_max: 10
       norm_cfg:
         type: BN
       loss:
@@ -42,13 +44,14 @@ model:
 data:
   train:
     name: coco
-    img_path: coco/train2017
-    ann_path: coco/annotations/instances_train2017.json
-    input_size: [320,320] #[w,h]
+    img_path: E:/coco17/train2017
+    ann_path: E:/coco17/annotations/instances_train2017.json
+    input_size: [416,416] #[w,h]
     keep_ratio: True
+    readall: False
     pipeline:
       perspective: 0.0
-      scale: [0.6, 1.4]
+      scale: [0.1, 2.0]
       stretch: [[1, 1], [1, 1]]
       rotation: 0
       shear: 0
@@ -57,35 +60,37 @@ data:
       brightness: 0.2
       contrast: [0.6, 1.4]
       saturation: [0.5, 1.2]
-      normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+      normalize: [[127.0, 127.0, 127.0], [128.0, 128.0, 128.0]]
   val:
     name: coco
-    img_path: coco/val2017
-    ann_path: coco/annotations/instances_val2017.json
-    input_size: [320,320] #[w,h]
+    img_path: E:/coco17/val2017
+    ann_path: E:/coco17/annotations/instances_val2017.json
+    input_size: [416,416] #[w,h]
     keep_ratio: True
     pipeline:
-      normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+      normalize: [[127.0, 127.0, 127.0], [128.0, 128.0, 128.0]]
 device:
   gpu_ids: [0]
-  workers_per_gpu: 8
-  batchsize_per_gpu: 192
+  workers_per_gpu: 0
+  batchsize_per_gpu: 24
+  amp_level: '02'
+
 schedule:
 #  resume:
 #  load_model: YOUR_MODEL_PATH
   optimizer:
     name: SGD
-    lr: 0.14
+    lr: 1e-3
     momentum: 0.9
-    weight_decay: 0.0001
+    weight_decay: 4e-5
   warmup:
     name: linear
-    steps: 300
-    ratio: 0.1
-  total_epochs: 280
+    steps: 510
+    ratio: 0.01
+  total_epochs: 300
   lr_schedule:
-    name: MultiStepLR
-    milestones: [240,260,275]
+    name: CosineAnnealingLR
+    T_max: 30
     gamma: 0.1
   val_intervals: 10
 evaluator:

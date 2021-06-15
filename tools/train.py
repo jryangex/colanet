@@ -20,11 +20,11 @@ import warnings
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ProgressBar
 warnings.simplefilter("ignore", UserWarning)
-from nanodet.util import mkdir, Logger, cfg, load_config, convert_old_model
-from nanodet.data.collate import collate_function
-from nanodet.data.dataset import build_dataset
-from nanodet.trainer.task import TrainingTask
-from nanodet.evaluator import build_evaluator
+from package.util import mkdir, Logger, cfg, load_config, convert_old_model
+from package.data.collate import collate_function
+from package.data.dataset import build_dataset
+from package.trainer.task import TrainingTask
+from package.evaluator import build_evaluator
 
 
 def parse_args():
@@ -79,7 +79,10 @@ def main(args):
         logger.log('Loaded model weight from {}'.format(cfg.schedule.load_model))
 
     model_resume_path = os.path.join(cfg.save_dir, 'model_last.ckpt') if 'resume' in cfg.schedule else None
-
+    for i in range(len(train_dataloader)):
+        dataloaderIter = iter(train_dataloader)
+        next(dataloaderIter)
+        
     trainer = pl.Trainer(default_root_dir=cfg.save_dir,
                          max_epochs=cfg.schedule.total_epochs,
                          gpus=cfg.device.gpu_ids,

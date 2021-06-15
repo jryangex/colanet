@@ -1,12 +1,12 @@
 import torch
 import torch.nn as nn
-from nanodet.util import multi_apply
+from package.util import multi_apply
 from ..module.conv import ConvModule, DepthwiseConvModule
 from ..module.init_weights import normal_init
 from .gfl_head import GFLHead
 
 
-class NanoDetHead(GFLHead):
+class ColanetHead(GFLHead):
     """
     Modified from GFL, use same loss functions but much lightweight convolution heads
     """
@@ -29,7 +29,7 @@ class NanoDetHead(GFLHead):
         self.share_cls_reg = share_cls_reg
         self.activation = activation
         self.ConvModule = ConvModule if conv_type == 'Conv' else DepthwiseConvModule
-        super(NanoDetHead, self).__init__(num_classes,
+        super(ColanetHead, self).__init__(num_classes,
                                           loss,
                                           input_channel,
                                           feat_channels,

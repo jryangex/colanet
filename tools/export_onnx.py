@@ -1,8 +1,8 @@
 import os
 import argparse
 import torch
-from nanodet.model.arch import build_model
-from nanodet.util import Logger, cfg, load_config, load_model_weight
+from package.model.arch import build_model
+from package.util import Logger, cfg, load_config, load_model_weight
 
 
 def generate_ouput_names(head_cfg):
@@ -22,11 +22,11 @@ def main(config, model_path, output_path, input_shape=(320, 320)):
         deploy_config = config.model
         deploy_config.arch.backbone.update({'deploy': True})
         deploy_model = build_model(deploy_config)
-        from nanodet.model.backbone.repvgg import repvgg_det_model_convert
+        from package.model.backbone.repvgg import repvgg_det_model_convert
         model = repvgg_det_model_convert(model, deploy_model)
     dummy_input = torch.autograd.Variable(torch.randn(1, 3, input_shape[0], input_shape[1]))
     output_names = None
-    if config.model.arch.head.name == 'NanoDetHead':
+    if config.model.arch.head.name == 'ColanetHead':
         output_names = generate_ouput_names(config.model.arch.head)
     torch.onnx.export(model,
                       dummy_input,

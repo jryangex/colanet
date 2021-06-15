@@ -6,6 +6,7 @@ activations = {'ReLU': nn.ReLU,
                'SELU': nn.SELU,
                'ELU': nn.ELU,
                'GELU': nn.GELU,
+               'SiLU':nn.SiLU,
                None: nn.Identity
                }
 

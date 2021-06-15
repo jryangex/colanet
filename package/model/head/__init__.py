@@ -1,6 +1,6 @@
 import copy
 from .gfl_head import GFLHead
-from .nanodet_head import NanoDetHead
+from .colanet_head import ColanetHead
 
 
 def build_head(cfg):
@@ -8,7 +8,7 @@ def build_head(cfg):
     name = head_cfg.pop('name')
     if name == 'GFLHead':
         return GFLHead(**head_cfg)
-    elif name == 'NanoDetHead':
-        return NanoDetHead(**head_cfg)
+    elif name == 'ColanetHead':
+        return ColanetHead(**head_cfg)
     else:
         raise NotImplementedError
