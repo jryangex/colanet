@@ -7,7 +7,7 @@ model:
       model_name: efficientnet_lite1
       out_stages: [2,4,6]
       activation: SiLU
-      pretrain: True
+      pretrain: False
     fpn:
       name: PAN
       in_channels: [40, 112, 320]
@@ -80,9 +80,9 @@ schedule:
 #  load_model: YOUR_MODEL_PATH
   optimizer:
     name: SGD
-    lr: 1e-3
+    lr: 0.001
     momentum: 0.9
-    weight_decay: 4e-5
+    weight_decay: 0.00004
   warmup:
     name: linear
     steps: 510
@@ -91,7 +91,7 @@ schedule:
   lr_schedule:
     name: CosineAnnealingLR
     T_max: 30
-    gamma: 0.1
+    #gamma: 0.1
   val_intervals: 10
 evaluator:
   name: CocoDetectionEvaluator
