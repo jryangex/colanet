@@ -67,7 +67,7 @@ class TrainingTask(LightningModule):
                 self.log('Train/'+k, v, on_step=True, on_epoch=True, prog_bar=True, sync_dist=True)
         elif self.log_style == 'NanoDet' and self.global_step % self.cfg.log.interval == 0:
             lr = self.optimizers().param_groups[0]['lr']
-            log_msg = 'Train|Epoch{}/{}|Iter{}({})| lr:{:.2e}| '.format(self.current_epoch+1,
+            log_msg = 'Train|Epoch:{}/{} | Iter{}({})| lr:{:.2e}| '.format(self.current_epoch+1,
                 self.cfg.schedule.total_epochs, self.global_step, batch_idx, lr)
             self.scalar_summary('Train_loss/lr', 'Train', lr, self.global_step)
             for l in loss_states:
@@ -90,7 +90,7 @@ class TrainingTask(LightningModule):
                 self.log('Val/' + k, v, on_step=False, on_epoch=True, prog_bar=False, sync_dist=True)
         elif self.log_style == 'NanoDet' and batch_idx % self.cfg.log.interval == 0:
             lr = self.optimizers().param_groups[0]['lr']
-            log_msg = 'Val|Epoch{}/{}|Iter{}({})| lr:{:.2e}| '.format(self.current_epoch+1,
+            log_msg = 'Val|Epoch:{}/{} | Iter{}({})| lr:{:.2e}| '.format(self.current_epoch+1,
                 self.cfg.schedule.total_epochs, self.global_step, batch_idx, lr)
             for l in loss_states:
                 log_msg += '{}:{:.4f}| '.format(l, loss_states[l].mean().item())
@@ -111,6 +111,7 @@ class TrainingTask(LightningModule):
         for res in validation_step_outputs:
             results.update(res)
         all_results = gather_results(results)
+        # all_results = results
         if all_results:
             eval_results = self.evaluator.evaluate(all_results, self.cfg.save_dir, rank=self.local_rank)
             metric = eval_results[self.cfg.evaluator.save_key]
