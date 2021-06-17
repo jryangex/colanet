@@ -10,6 +10,7 @@ def build_model(model_cfg):
                       "in your YAML config file to OneStageDetector. ")
         model = OneStageDetector(model_cfg.arch.backbone, model_cfg.arch.fpn, model_cfg.arch.head)
     elif model_cfg.arch.name == 'OneStageDetector':
+        print("build model one stage")
         model = OneStageDetector(model_cfg.arch.backbone, model_cfg.arch.fpn, model_cfg.arch.head)
     else:
         raise NotImplementedError

@@ -71,9 +71,9 @@ data:
       normalize: [[127.0, 127.0, 127.0], [128.0, 128.0, 128.0]]
 device:
   gpu_ids: [0]
-  workers_per_gpu: 0
-  batchsize_per_gpu: 48
-  amp_level: '02'
+  workers_per_gpu: 6
+  batchsize_per_gpu: 64
+  amp_level: 'O2'
 
 schedule:
 #  resume:

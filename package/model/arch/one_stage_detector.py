@@ -12,10 +12,14 @@ class OneStageDetector(nn.Module):
                  fpn_cfg=None,
                  head_cfg=None,):
         super(OneStageDetector, self).__init__()
+        print('build back bone')
         self.backbone = build_backbone(backbone_cfg)
         if fpn_cfg is not None:
+            print('build fpn')
+
             self.fpn = build_fpn(fpn_cfg)
         if head_cfg is not None:
+            print('build head')
             self.head = build_head(head_cfg)
 
     def forward(self, x):

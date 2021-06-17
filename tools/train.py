@@ -18,6 +18,7 @@ import argparse
 import numpy as np
 import warnings
 import pytorch_lightning as pl
+from tqdm import tqdm 
 from pytorch_lightning.callbacks import ProgressBar
 warnings.simplefilter("ignore", UserWarning)
 from package.util import mkdir, Logger, cfg, load_config, convert_old_model
@@ -79,17 +80,18 @@ def main(args):
         logger.log('Loaded model weight from {}'.format(cfg.schedule.load_model))
 
     model_resume_path = os.path.join(cfg.save_dir, 'model_last.ckpt') if 'resume' in cfg.schedule else None
-    for i in range(len(train_dataloader)):
-        dataloaderIter = iter(train_dataloader)
-        next(dataloaderIter)
+    if cfg.data.train.readall is True:
+        for i in tqdm(range(len(train_dataloader))):
+            dataloaderIter = iter(train_dataloader)
+            next(dataloaderIter)
         
     trainer = pl.Trainer(default_root_dir=cfg.save_dir,
                          max_epochs=cfg.schedule.total_epochs,
                          gpus=cfg.device.gpu_ids,
                          check_val_every_n_epoch=cfg.schedule.val_intervals,
                          accelerator='dp',
-                         #amp_backend='apex', amp_level=cfg.device.amp_level,
-                         precision=16,
+                         amp_backend='apex', amp_level=cfg.device.amp_level,
+                         #precision=16,
                          log_every_n_steps=cfg.log.interval,
                          num_sanity_val_steps=0,
                          resume_from_checkpoint=model_resume_path,
