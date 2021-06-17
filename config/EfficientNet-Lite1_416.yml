@@ -72,7 +72,7 @@ data:
 device:
   gpu_ids: [0]
   workers_per_gpu: 0
-  batchsize_per_gpu: 24
+  batchsize_per_gpu: 12
   amp_level: '02'
 
 schedule:
@@ -98,7 +98,7 @@ evaluator:
   save_key: mAP
 
 log:
-  interval: 10
+  interval: 1000
 
 class_names: ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
               'train', 'truck', 'boat', 'traffic_light', 'fire_hydrant',

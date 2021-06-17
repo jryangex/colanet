@@ -25,8 +25,8 @@ from package.data.collate import collate_function
 from package.data.dataset import build_dataset
 from package.trainer.task import TrainingTask
 from package.evaluator import build_evaluator
-
-
+os.environ['MASTER_PORT'] = '12355'
+os.environ['MASTER_ADDR'] = 'localhost'
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('config', help='train config file path')
@@ -68,7 +68,7 @@ def main(args):
 
     logger.log('Creating model...')
     task = TrainingTask(cfg, evaluator)
-
+    
     if 'load_model' in cfg.schedule:
         ckpt = torch.load(cfg.schedule.load_model)
         if 'pytorch-lightning_version' not in ckpt:
@@ -94,7 +94,7 @@ def main(args):
                          num_sanity_val_steps=0,
                          resume_from_checkpoint=model_resume_path,
                          callbacks=[ProgressBar(refresh_rate=0)],  # disable tqdm bar
-                         benchmark=True,
+                         # benchmark=True,
                          )
 
     trainer.fit(task, train_dataloader, val_dataloader)

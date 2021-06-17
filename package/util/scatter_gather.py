@@ -55,7 +55,10 @@ def gather_results(result_part):
     if dist.is_available() and dist.is_initialized():
         rank = dist.get_rank()
         world_size = dist.get_world_size()
-
+        if dist.is_nccl_available() is True:
+            dist.init_process_group(backed = 'nccl', world_size = world_size, rank = rank)
+        else:
+            dist.init_process_group(backed = 'gloo', world_size = world_size, rank = rank)
     # dump result part to tensor with pickle
     part_tensor = torch.tensor(
         bytearray(pickle.dumps(result_part)), dtype=torch.uint8, device='cuda')
@@ -63,7 +66,8 @@ def gather_results(result_part):
     # gather all result part tensor shape
     shape_tensor = torch.tensor(part_tensor.shape, device='cuda')
     shape_list = [shape_tensor.clone() for _ in range(world_size)]
-    dist.all_gather(shape_list, shape_tensor)
+    if dist.is_initialized() is True:
+        dist.all_gather(shape_list, shape_tensor)
 
     # padding result part tensor to max length
     shape_max = torch.tensor(shape_list).max()
@@ -74,7 +78,8 @@ def gather_results(result_part):
     ]
 
     # gather all result dict
-    dist.all_gather(part_recv_list, part_send)
+    if dist.is_initialized() is True:
+        dist.all_gather(part_recv_list, part_send)
 
     if rank < 1:
         all_res = {}
