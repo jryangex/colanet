@@ -88,13 +88,13 @@ def main(args):
                          gpus=cfg.device.gpu_ids,
                          check_val_every_n_epoch=cfg.schedule.val_intervals,
                          accelerator='dp',
-                         amp_backend='apex', amp_level=cfg.device.amp_level,
-                         #precision=16,
+                         #amp_backend='apex', amp_level=cfg.device.amp_level,
+                         precision=16,
                          log_every_n_steps=cfg.log.interval,
                          num_sanity_val_steps=0,
                          resume_from_checkpoint=model_resume_path,
                          callbacks=[ProgressBar(refresh_rate=0)],  # disable tqdm bar
-                         # benchmark=True,
+                         benchmark=True,
                          )
 
     trainer.fit(task, train_dataloader, val_dataloader)

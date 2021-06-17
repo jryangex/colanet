@@ -110,8 +110,8 @@ class TrainingTask(LightningModule):
         results = {}
         for res in validation_step_outputs:
             results.update(res)
-        all_results = gather_results(results)
-        # all_results = results
+        #all_results = gather_results(results)
+        all_results = results
         if all_results:
             eval_results = self.evaluator.evaluate(all_results, self.cfg.save_dir, rank=self.local_rank)
             metric = eval_results[self.cfg.evaluator.save_key]

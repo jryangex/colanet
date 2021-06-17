@@ -72,7 +72,7 @@ data:
 device:
   gpu_ids: [0]
   workers_per_gpu: 0
-  batchsize_per_gpu: 12
+  batchsize_per_gpu: 48
   amp_level: '02'
 
 schedule:
