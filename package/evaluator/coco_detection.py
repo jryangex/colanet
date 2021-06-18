@@ -30,7 +30,7 @@ class CocoDetectionEvaluator:
         self.cat_ids = dataset.cat_ids
         self.metric_names = ['mAP', 'AP_50', 'AP_75', 'AP_small', 'AP_m', 'AP_l']
         
-    def xyxy2xywh(bbox):
+    def xyxy2xywh(self, bbox):
         """
         change bbox to coco format
         :param bbox: [x1, y1, x2, y2]
