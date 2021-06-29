@@ -83,7 +83,7 @@ schedule:
   #resume:
   #load_model: log/nanodet_m_416/model_last.ckpt
   optimizer:
-    name: Adam
+    name: SGD
     lr: 0.16
     momentum: 0.9
     weight_decay: 0.00004
@@ -96,7 +96,7 @@ schedule:
     name: CosineAnnealingLR
     T_max: 30
     #gamma: 0.1
-  val_intervals: 10
+  val_intervals: 1
 evaluator:
   name: CocoDetectionEvaluator
   save_key: mAP
