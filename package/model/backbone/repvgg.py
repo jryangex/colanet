@@ -10,7 +10,7 @@ Code from https://github.com/DingXiaoH/RepVGG
 import torch.nn as nn
 import numpy as np
 import torch
-from nanodet.model.module.conv import RepVGGConvModule
+from ..module.conv import RepVGGConvModule
 
 optional_groupwise_layers = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26]
 g2_map = {l: 2 for l in optional_groupwise_layers}
