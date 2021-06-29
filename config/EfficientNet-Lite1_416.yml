@@ -79,7 +79,7 @@ schedule:
   resume:
 #  load_model: YOUR_MODEL_PATH
   optimizer:
-    name: Adam
+    name: SGD
     lr: 0.16
     momentum: 0.9
     weight_decay: 0.00004
