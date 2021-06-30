@@ -10,17 +10,19 @@ model:
   arch:
     name: OneStageDetector
     backbone:
-      name: ShuffleNetV2
-      model_size: 1.0x
-      out_stages: [2,3,4]
-      activation: LeakyReLU
-      pretrain: True
+      name: Ic_resnet50
+      #model_size: 1.0x
+      out_stages: [1,2,3,4]
+      activation: ReLU
+      pretrain: False
+      depth: 50
+           
     fpn:
       name: PAN
-      in_channels: [116, 232, 464]
+      in_channels: [256, 512, 1024, 2048]
       out_channels: 96
-      start_level: 0
-      num_outs: 3
+      start_level: 1
+      num_outs: 5
     head:
       name: ColanetHead
       num_classes: 80
@@ -77,7 +79,7 @@ data:
 device:
   gpu_ids: [0]
   workers_per_gpu: 0
-  batchsize_per_gpu: 64
+  batchsize_per_gpu: 16
   amp_level: 'O3'
 
 schedule:

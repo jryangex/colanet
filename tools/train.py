@@ -107,7 +107,7 @@ def main(args):
     listdir_info = os.listdir(os.path.join(cfg.save_dir,'lightning_logs'))
     existing_versions = []
     for listing in listdir_info:
-        print(listing)
+
         bn = os.path.basename(listing)
         if bn.startswith("version_"):
             dir_ver = bn.split("_")[1].replace('/', '')
