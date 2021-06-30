@@ -24,7 +24,7 @@ from typing import Any, List
 from package.util import mkdir, gather_results
 
 from ..model.arch import build_model
-
+from adabound import AdaBound
 
 class TrainingTask(LightningModule):
     """
@@ -171,8 +171,11 @@ class TrainingTask(LightningModule):
         """
         optimizer_cfg = copy.deepcopy(self.cfg.schedule.optimizer)
         name = optimizer_cfg.pop('name')
-        build_optimizer = getattr(torch.optim, name)
-        optimizer = build_optimizer(params=self.parameters(), **optimizer_cfg)
+        if name == 'AdaBound':
+            optimizer = AdaBound(params=self.parameters(), **optimizer_cfg)
+        else:
+            build_optimizer = getattr(torch.optim, name)
+            optimizer = build_optimizer(params=self.parameters(), **optimizer_cfg)
 
         schedule_cfg = copy.deepcopy(self.cfg.schedule.lr_schedule)
         name = schedule_cfg.pop('name')

@@ -26,6 +26,8 @@ from package.data.collate import collate_function
 from package.data.dataset import build_dataset
 from package.trainer.task import TrainingTask
 from package.evaluator import build_evaluator
+import shutil 
+
 os.environ['MASTER_PORT'] = '12355'
 os.environ['MASTER_ADDR'] = 'localhost'
 def parse_args():
@@ -84,7 +86,8 @@ def main(args):
         for i in tqdm(range(len(train_dataloader))):
             dataloaderIter = iter(train_dataloader)
             next(dataloaderIter)
-        
+    
+    
     trainer = pl.Trainer(default_root_dir=cfg.save_dir,
                          max_epochs=cfg.schedule.total_epochs,
                          gpus=cfg.device.gpu_ids,
@@ -98,8 +101,22 @@ def main(args):
                          callbacks=[ProgressBar(refresh_rate=0)],  # disable tqdm bar
                          benchmark=True,
                          )
-
+    
     trainer.fit(task, train_dataloader, val_dataloader)
+    logger.log("copy config")
+    listdir_info = os.listdir(os.path.join(cfg.save_dir,'lightning_logs'))
+    existing_versions = []
+    for listing in listdir_info:
+        print(listing)
+        bn = os.path.basename(listing)
+        if bn.startswith("version_"):
+            dir_ver = bn.split("_")[1].replace('/', '')
+            existing_versions.append(int(dir_ver))
+        if len(existing_versions) == 0:
+                existing_versions.append(0)
+    strint = str('lightning_logs/version_'+ str(max(existing_versions)))
+    shutil.copy(args.config, os.path.join(cfg.save_dir,strint))
+   
 
 
 if __name__ == '__main__':

@@ -42,6 +42,18 @@ class CocoDetectionEvaluator:
                 bbox[2].item() - bbox[0].item(),
                 bbox[3].item() - bbox[1].item(),
         ]
+    def xyxy2xywh_noitem(self, bbox):
+        """
+        change bbox to coco format
+        :param bbox: [x1, y1, x2, y2]
+        :return: [x, y, w, h]
+        """
+        return [
+                bbox[0],
+                bbox[1],
+                bbox[2] - bbox[0],
+                bbox[3] - bbox[1],
+        ]
 
     def results2json(self, results):
         """
@@ -52,16 +64,32 @@ class CocoDetectionEvaluator:
                                    score: }
         """
         json_results = []
+        
         for image_id, dets in results.items():
             for label, bboxes in dets.items():
                 category_id = self.cat_ids[label]
                 for bbox in bboxes:
                     score = float(bbox[4])
+                    try:
+                        detection = dict(
+                        image_id=int(image_id),
+                        category_id=int(category_id),
+                        bbox=self.xyxy2xywh(bbox),
+                        score=score)
+                        
+                    except:
+                        detection = dict(
+                        image_id=int(image_id),
+                        category_id=int(category_id),
+                        bbox=self.xyxy2xywh_noitem(bbox),
+                        score=score)
+                        
                     detection = dict(
                         image_id=int(image_id),
                         category_id=int(category_id),
                         bbox=self.xyxy2xywh(bbox),
                         score=score)
+                    
                     json_results.append(detection)
         return json_results
 
