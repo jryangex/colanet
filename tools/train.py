@@ -12,21 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import torch
 import argparse
-import numpy as np
+import os
+import datetime
 import warnings
+
+import numpy as np
 import pytorch_lightning as pl
-from tqdm import tqdm 
+import torch
 from pytorch_lightning.callbacks import ProgressBar
+from tqdm import tqdm
+
 warnings.simplefilter("ignore", UserWarning)
-from package.util import mkdir, Logger, cfg, load_config, convert_old_model
+import shutil
+
 from package.data.collate import collate_function
 from package.data.dataset import build_dataset
-from package.trainer.task import TrainingTask
 from package.evaluator import build_evaluator
-import shutil 
+from package.trainer.task import TrainingTask
+from package.util import Logger, cfg, convert_old_model, load_config, mkdir
 
 os.environ['MASTER_PORT'] = '12355'
 os.environ['MASTER_ADDR'] = 'localhost'
@@ -42,6 +46,8 @@ def parse_args():
 
 
 def main(args):
+    start = datetime.datetime.now()
+
     load_config(cfg, args.config)
     if cfg.model.arch.head.num_classes != len(cfg.class_names):
         raise ValueError('cfg.model.arch.head.num_classes must equal len(cfg.class_names), '
@@ -116,6 +122,9 @@ def main(args):
                 existing_versions.append(0)
     strint = str('lightning_logs/version_'+ str(max(existing_versions)))
     shutil.copy(args.config, os.path.join(cfg.save_dir,strint))
+    end = datetime.datetime.now()
+    logger.log("執行時間：", end - start)
+
    
 
 
