@@ -125,9 +125,6 @@ def main(args):
     end = datetime.datetime.now()
     logger.log("執行時間：", end - start)
 
-   
-
-
 if __name__ == '__main__':
     args = parse_args()
     main(args)

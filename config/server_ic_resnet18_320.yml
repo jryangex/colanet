@@ -1,28 +1,21 @@
-#nanodet-m-416
-# COCO mAP(0.5:0.95) = 0.235
-#             AP_50  = 0.384
-#             AP_75  = 0.242
-#           AP_small = 0.082
-#               AP_m = 0.240
-#               AP_l = 0.375
-save_dir: log/phase2/ic_resnet50
+
+save_dir: log/phase2/ic_resnet18
 model:
   arch:
     name: OneStageDetector
     backbone:
-      name: Ic_resnet50
-      #model_size: 1.0x
-      out_stages: [1,2,3,4]
-      activation: ReLU
+      name: Ic_resnet
+      out_stages: [2,4,6]
+      activation: LeakyReLU
       pretrain: False
-      depth: 50
+      depth: 18
            
     fpn:
       name: PAN
-      in_channels: [256, 512, 1024, 2048]
+      in_channels: [40, 112, 320]
       out_channels: 96
-      start_level: 1
-      num_outs: 5
+      start_level: 0
+      num_outs: 3
     head:
       name: ColanetHead
       num_classes: 80
@@ -53,9 +46,9 @@ data:
     name: coco
     img_path: /workspace/Cola/coco17/train2017
     ann_path: /workspace/Cola/coco17/annotations/instances_train2017.json
-    input_size: [416,416] #[w,h]
+    input_size: [320,320] #[w,h]
     keep_ratio: True
-    readall: False
+    readall: True
     pipeline:
       perspective: 0.0
       scale: [0.5, 1.4]
@@ -79,7 +72,7 @@ data:
 device:
   gpu_ids: [3]
   workers_per_gpu: 0
-  batchsize_per_gpu: 64
+  batchsize_per_gpu: 128
   amp_level: 'O3'
 
 schedule:

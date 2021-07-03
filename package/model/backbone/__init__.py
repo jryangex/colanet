@@ -19,7 +19,7 @@ def build_backbone(cfg):
         return ShuffleNetV2(**backbone_cfg)
     elif name == 'Ic_ShuffleNetV2':
         return Ic_ShuffleNetV2(**backbone_cfg)
-    elif name == 'Ic_resnet50':
+    elif name == 'Ic_resnet':
         return Ic_resnet50(**backbone_cfg)
     elif name == 'GhostNet':
         return GhostNet(**backbone_cfg)
