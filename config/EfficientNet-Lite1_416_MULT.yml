@@ -1,4 +1,4 @@
-save_dir: log/efficient1_416_SGD_Mult
+save_dir: log/efficient1_416_SGD_Mult_ada
 model:
   arch:
     name: OneStageDetector
@@ -70,19 +70,19 @@ data:
     pipeline:
       normalize: [[127.0, 127.0, 127.0], [128.0, 128.0, 128.0]]
 device:
-  gpu_ids: [1]
+  gpu_ids: [0]
   workers_per_gpu: 2
-  batchsize_per_gpu: 48
+  batchsize_per_gpu: 128
   amp_level: 'O3'
 
 schedule:
   #resume:
 #  load_model: YOUR_MODEL_PATH
   optimizer:
-    name: SGD
-    lr: 0.1  #0.1 #0.16
-    momentum: 0.9
-    #weight_decay: 0.00004
+    name: AdaBound
+    lr: 0.14
+    final_lr: 0.1
+    weight_decay: 0.0001
   warmup:
     name: linear
     steps: 510

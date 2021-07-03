@@ -123,7 +123,8 @@ def main(args):
     strint = str('lightning_logs/version_'+ str(max(existing_versions)))
     shutil.copy(args.config, os.path.join(cfg.save_dir,strint))
     end = datetime.datetime.now()
-    logger.log("執行時間：", end - start)
+    runtimee = str("執行時間：", end - start)
+    logger.log(runtimee)
 
 if __name__ == '__main__':
     args = parse_args()
