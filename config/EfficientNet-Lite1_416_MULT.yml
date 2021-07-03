@@ -93,7 +93,7 @@ schedule:
     #T_max: 30
 
     name: MultiStepLR
-    milestones: [100,200,250]
+    milestones: [100,200,250,275]
     gamma: 0.1
 
   val_intervals: 5
