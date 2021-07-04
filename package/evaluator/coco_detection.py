@@ -83,13 +83,7 @@ class CocoDetectionEvaluator:
                         category_id=int(category_id),
                         bbox=self.xyxy2xywh_noitem(bbox),
                         score=score)
-                        
-                    detection = dict(
-                        image_id=int(image_id),
-                        category_id=int(category_id),
-                        bbox=self.xyxy2xywh(bbox),
-                        score=score)
-                    
+              
                     json_results.append(detection)
         return json_results
 
