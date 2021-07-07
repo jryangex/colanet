@@ -1,4 +1,4 @@
-save_dir: log/efficient1_416_MISH_Mult_ada
+save_dir: log/efficient1_416_MISH_Reduce_adabound
 model:
   arch:
     name: OneStageDetector
@@ -20,7 +20,7 @@ model:
       input_channel: 128
       feat_channels: 128
       stacked_convs: 3
-      activation: LeakyReLU
+      activation: Mish
       # silu(x)=x∗σ(x),where σ(x) is the logistic sigmoid.
       share_cls_reg: True
       octave_base_scale: 8
@@ -72,7 +72,7 @@ data:
 device:
   gpu_ids: [0]
   workers_per_gpu: 2
-  batchsize_per_gpu: 128
+  batchsize_per_gpu: 96  #3090
   amp_level: 'O3'
 
 schedule:
@@ -91,10 +91,16 @@ schedule:
   lr_schedule:
     #name: CosineAnnealingLR  
     #T_max: 30
-
-    name: MultiStepLR
-    milestones: [100,200,250,275]
-    gamma: 0.1
+    name: ReduceLROnPlateau
+    mode: min
+    factor: 0.1
+    patience: 10
+    verbose: True
+    threshold: 0.00001
+    threshold_mode: rel
+    cooldown: 0
+    min_lr: 0
+    eps: 0.000000001
 
   val_intervals: 5
 evaluator:
