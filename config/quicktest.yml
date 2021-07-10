@@ -1,4 +1,4 @@
-save_dir: log/efficient1_416_MISH_Reduce_adabound
+save_dir: log/quicktest
 model:
   arch:
     name: OneStageDetector
@@ -46,7 +46,7 @@ data:
     name: coco
     img_path: E:/coco17/train2017
     ann_path: E:/coco17/annotations/instances_train2017.json
-    input_size: [416,416] #[w,h]
+    input_size: [320,320] #[w,h]
     keep_ratio: True
     readall: False
     pipeline:
@@ -65,45 +65,45 @@ data:
     name: coco
     img_path: E:/coco17/val2017
     ann_path: E:/coco17/annotations/instances_val2017.json
-    input_size: [416,416] #[w,h]
+    input_size: [320,320] #[w,h]
     keep_ratio: True
     pipeline:
       normalize: [[127.0, 127.0, 127.0], [128.0, 128.0, 128.0]]
 device:
   gpu_ids: [0]
-  workers_per_gpu: 2
+  workers_per_gpu: 4
   batchsize_per_gpu: 64  #3090
-  amp_level: 'O2'
+  amp_level: 'O1'
 
 schedule:
-  resume:
+  #resume:
 #  load_model: YOUR_MODEL_PATH
   optimizer:
-    name: AdaBound
-    lr: 0.16
-    final_lr: 0.1
-    weight_decay: 0.0001
+    name: SGD
+    lr: 0.14
+    momentum: 0.9
+    weight_decay: 0.00004
   warmup:
     name: linear
     steps: 510
     ratio: 0.01
-  total_epochs: 300
+  total_epochs: 30
   lr_schedule:
     #name: CosineAnnealingLR  
     #T_max: 30
     name: ReduceLROnPlateau
     mode: min
     factor: 0.5
-    patience: 30
+    patience: 5
     verbose: True
 
-  val_intervals: 5
+  val_intervals: 1
 evaluator:
   name: CocoDetectionEvaluator
   save_key: mAP
 
 log:
-  interval: 1000
+  interval: 50
 
 class_names: ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
               'train', 'truck', 'boat', 'traffic_light', 'fire_hydrant',

@@ -18,7 +18,8 @@ import warnings
 import json
 import torch
 import logging
-
+from apex.contrib.sparsity import ASP
+from apex.optimizers import FusedAdam
 from pytorch_lightning import LightningModule
 from typing import Any, List
 from package.util import mkdir, gather_results
@@ -176,6 +177,8 @@ class TrainingTask(LightningModule):
         name = optimizer_cfg.pop('name')
         if name == 'AdaBound':
             optimizer = AdaBound(params=self.parameters(), **optimizer_cfg)
+        elif name == 'FusedAdam':
+            optimizer = FusedAdam(params=self.parameters(), **optimizer_cfg)
         else:
             build_optimizer = getattr(torch.optim, name)
             optimizer = build_optimizer(params=self.parameters(), **optimizer_cfg)
@@ -188,7 +191,11 @@ class TrainingTask(LightningModule):
         #                 'interval': 'epoch',
         #                 'frequency': 1}
         # return [optimizer], [lr_scheduler]
-
+        
+        ASP.prune_trained_model(self.model, optimizer)
+        
+        #self.info("Model sparsity is %s" % ("enabled" if ASP.sparsity_is_enabled() else "disabled"))
+                  
         return optimizer
 
     def optimizer_step(self,
