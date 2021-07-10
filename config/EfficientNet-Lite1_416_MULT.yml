@@ -1,4 +1,4 @@
-save_dir: log/efficient1_416_MISH_Reduce_adabound
+save_dir: log/efficient1_416_MISH_Reduce_SGD
 model:
   arch:
     name: OneStageDetector
@@ -20,7 +20,7 @@ model:
       input_channel: 128
       feat_channels: 128
       stacked_convs: 3
-      activation: Mish
+      activation: LeakyReLU
       # silu(x)=x∗σ(x),where σ(x) is the logistic sigmoid.
       share_cls_reg: True
       octave_base_scale: 8
@@ -51,7 +51,7 @@ data:
     readall: False
     pipeline:
       perspective: 0.0
-      scale: [0.1, 2.0]
+      scale: [0.4, 1.5]
       stretch: [[1, 1], [1, 1]]
       rotation: 0
       shear: 0
@@ -76,13 +76,13 @@ device:
   amp_level: 'O2'
 
 schedule:
-  resume:
+ # resume:
 #  load_model: YOUR_MODEL_PATH
   optimizer:
-    name: AdaBound
-    lr: 0.16
-    final_lr: 0.1
-    weight_decay: 0.0001
+    name: SGD
+    lr: 0.14
+    momentum: 0.9
+    weight_decay: 0.00004
   warmup:
     name: linear
     steps: 510

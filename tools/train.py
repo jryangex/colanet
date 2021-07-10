@@ -106,7 +106,7 @@ def main(args):
                          resume_from_checkpoint=model_resume_path,
                          callbacks=[ProgressBar(refresh_rate=0)],  # disable tqdm bar
                          benchmark=True,
-                         limit_train_batches=0.25
+                         #limit_train_batches=0.25
                          )
 
     trainer.fit(task, train_dataloader, val_dataloader)
