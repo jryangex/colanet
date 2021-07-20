@@ -1,4 +1,4 @@
-save_dir: log/efficient1_416_MISH_Reduce_SGD
+save_dir: log/efficient1_416_silu_Mult_SGD
 model:
   arch:
     name: OneStageDetector
@@ -6,7 +6,7 @@ model:
       name: EfficientNetLite
       model_name: efficientnet_lite1
       out_stages: [2,4,6]
-      activation: Mish
+      activation: SiLU
       pretrain: True
     fpn:
       name: PAN
@@ -20,7 +20,7 @@ model:
       input_channel: 128
       feat_channels: 128
       stacked_convs: 3
-      activation: LeakyReLU
+      activation: SiLU
       # silu(x)=x∗σ(x),where σ(x) is the logistic sigmoid.
       share_cls_reg: True
       octave_base_scale: 8
@@ -51,7 +51,7 @@ data:
     readall: False
     pipeline:
       perspective: 0.0
-      scale: [0.4, 1.5]
+      scale: [0.1, 2.0]
       stretch: [[1, 1], [1, 1]]
       rotation: 0
       shear: 0
@@ -89,14 +89,9 @@ schedule:
     ratio: 0.01
   total_epochs: 300
   lr_schedule:
-    #name: CosineAnnealingLR  
-    #T_max: 30
-    name: ReduceLROnPlateau
-    mode: min
-    factor: 0.5
-    patience: 30
-    verbose: True
-
+    name: MultiStepLR
+    milestones: [130,150,160,165]
+    gamma: 0.1
   val_intervals: 5
 evaluator:
   name: CocoDetectionEvaluator

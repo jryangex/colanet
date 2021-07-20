@@ -82,7 +82,8 @@ class TrainingTask(LightningModule):
 
     def training_epoch_end(self, outputs: List[Any]) -> None:
         self.trainer.save_checkpoint(os.path.join(self.cfg.save_dir, 'model_last.ckpt'))
-        self.lr_scheduler.step(metrics=self.metric)
+        self.lr_scheduler.step()
+        #self.lr_scheduler.step(metrics=self.metric)
 
     def validation_step(self, batch, batch_idx):
         preds, loss, loss_states = self.model.forward_train(batch)
@@ -97,7 +98,7 @@ class TrainingTask(LightningModule):
                 self.cfg.schedule.total_epochs, self.global_step, batch_idx, lr)
             for l in loss_states:
                 log_msg += '{}:{:.4f}| '.format(l, loss_states[l].mean().item())
-            self.metrics=loss_states['loss_bbox'].mean().item()
+            self.metrics=loss_states['loss_qfl'].mean().item()
             self.info(log_msg)
 
         dets = self.model.head.post_process(preds, batch)
