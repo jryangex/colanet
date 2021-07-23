@@ -4,9 +4,9 @@ model:
     name: OneStageDetector
     backbone:
       name: EfficientNetLite
-      model_name: efficientnet_lite1
+      model_name: efficientnet_lite0
       out_stages: [2,4,6]
-      activation: Mish
+      activation: ReLU6
       pretrain: True
     fpn:
       name: PAN
@@ -20,13 +20,13 @@ model:
       input_channel: 128
       feat_channels: 128
       stacked_convs: 3
-      activation: Mish
+      activation: SiLU
       # silu(x)=x∗σ(x),where σ(x) is the logistic sigmoid.
       share_cls_reg: True
       octave_base_scale: 8
       scales_per_octave: 1
       strides: [8, 16, 32]
-      reg_max: 10
+      reg_max: 7
       norm_cfg:
         type: BN
       loss:
@@ -72,8 +72,8 @@ data:
 device:
   gpu_ids: [0]
   workers_per_gpu: 4
-  batchsize_per_gpu: 64  #3090
-  amp_level: 'O1'
+  batchsize_per_gpu: 24  #3090
+  amp_level: 'O3'
 
 schedule:
   #resume:
@@ -82,22 +82,26 @@ schedule:
     name: SGD
     lr: 0.14
     momentum: 0.9
-    weight_decay: 0.00004
+    weight_decay: 0.0001
   warmup:
     name: linear
-    steps: 510
-    ratio: 0.01
-  total_epochs: 30
+    steps: 1
+    ratio: 0.1
+  total_epochs: 5
   lr_schedule:
-    #name: CosineAnnealingLR  
-    #T_max: 30
     name: ReduceLROnPlateau
     mode: min
-    factor: 0.5
-    patience: 5
+    factor: 0.1
+    patience: 2 #15
     verbose: True
+    threshold: 0.00001
+    threshold_mode: rel
+    cooldown: 0
+    min_lr: 0
+    eps: 0.000000001 #1e-08
 
-  val_intervals: 1
+
+  val_intervals: 5
 evaluator:
   name: CocoDetectionEvaluator
   save_key: mAP

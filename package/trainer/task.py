@@ -18,7 +18,7 @@ import warnings
 import json
 import torch
 import logging
-from apex.contrib.sparsity import ASP
+#from apex.contrib.sparsity import ASP
 from apex.optimizers import FusedAdam
 from pytorch_lightning import LightningModule
 from typing import Any, List
@@ -82,8 +82,10 @@ class TrainingTask(LightningModule):
 
     def training_epoch_end(self, outputs: List[Any]) -> None:
         self.trainer.save_checkpoint(os.path.join(self.cfg.save_dir, 'model_last.ckpt'))
-        self.lr_scheduler.step()
-        #self.lr_scheduler.step(metrics=self.metric)
+        try:
+            self.lr_scheduler.step()
+        except:
+            self.lr_scheduler.step(metrics=self.metric)
 
     def validation_step(self, batch, batch_idx):
         preds, loss, loss_states = self.model.forward_train(batch)
@@ -193,7 +195,7 @@ class TrainingTask(LightningModule):
         #                 'frequency': 1}
         # return [optimizer], [lr_scheduler]
         
-        ASP.prune_trained_model(self.model, optimizer)
+       # ASP.prune_trained_model(self.model, optimizer)
         
         #self.info("Model sparsity is %s" % ("enabled" if ASP.sparsity_is_enabled() else "disabled"))
                   
@@ -238,7 +240,7 @@ class TrainingTask(LightningModule):
         # update params
         optimizer.step(closure=optimizer_closure)
         optimizer.zero_grad()
-
+        
     def get_progress_bar_dict(self):
         # don't show the version number
         items = super().get_progress_bar_dict()

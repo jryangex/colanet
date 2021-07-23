@@ -16,11 +16,16 @@ import argparse
 import os
 import datetime
 import warnings
+from torchsummary import summary
 
 import numpy as np
 import pytorch_lightning as pl
 import torch
 from pytorch_lightning.callbacks import ProgressBar
+#from pytorch_lightning.callbacks import ModelPruning
+#from pytorch_lightning.callbacks import QuantizationAwareTraining
+#import torch.nn.utils.prune as prune
+
 from tqdm import tqdm
 
 warnings.simplefilter("ignore", UserWarning)
@@ -44,7 +49,17 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+def compute_amount(epoch):
+    # the sum of all returned values need to be smaller than 1
+        if epoch == 10:
+            return 0.5
 
+        elif epoch == 50:
+            return 0.25
+
+        elif 75 < epoch < 99 :
+            return 0.01
+        
 def main(args):
     start = datetime.datetime.now()
 
@@ -94,23 +109,27 @@ def main(args):
             next(dataloaderIter)
     
     
+
     trainer = pl.Trainer(default_root_dir=cfg.save_dir,
                          max_epochs=cfg.schedule.total_epochs,
                          gpus=cfg.device.gpu_ids,
                          check_val_every_n_epoch=cfg.schedule.val_intervals,
                          accelerator='dp',
-                         amp_backend='apex', amp_level=cfg.device.amp_level,
-                         #precision=16,                        
+                         #amp_backend='apex', amp_level=cfg.device.amp_level,
+                         precision=16,                        
                          log_every_n_steps=cfg.log.interval,
                          num_sanity_val_steps=0,
                          resume_from_checkpoint=model_resume_path,
-                         callbacks=[ProgressBar(refresh_rate=0)],  # disable tqdm bar
-                         benchmark=True,
-                         #limit_train_batches=0.25
+                         callbacks=[ProgressBar(refresh_rate=0),
+                                   # ModelPruning("l1_unstructured", amount=0.5, verbose=1),
+                                    ], 
+                         benchmark=True
                          )
-
+    
     trainer.fit(task, train_dataloader, val_dataloader)
     logger.log("copy config")
+    #prune.remove(task, 'weight')
+   
     listdir_info = os.listdir(os.path.join(cfg.save_dir,'lightning_logs'))
     existing_versions = []
     for listing in listdir_info:
@@ -122,8 +141,19 @@ def main(args):
         if len(existing_versions) == 0:
                 existing_versions.append(0)
     strint = str('lightning_logs/version_'+ str(max(existing_versions)))
-    shutil.copy(args.config, os.path.join(cfg.save_dir,strint))
+    newpath = os.path.join(cfg.save_dir,strint)
+    shutil.copy(args.config, newpath)
+    
+    input_sample = torch.randn((1, 3, cfg.data.train.input_size[0] , cfg.data.train.input_size[1]))
+    print(input_sample.size())
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    inputs = task.to(device)
+    summary(inputs, input_size=(3, cfg.data.train.input_size[0], cfg.data.train.input_size[1]),batch_size=cfg.device.batchsize_per_gpu)
+    
+    task.to_onnx(os.path.join(newpath,'model.onnx'), input_sample=input_sample, export_params=True)
+    
     end = datetime.datetime.now()
+    
     runtimee = str("執行時間："+str(end - start))
     logger.log(runtimee)
 
