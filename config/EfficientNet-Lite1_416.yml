@@ -1,4 +1,4 @@
-save_dir: log/efficient1_416_SGD_cosine
+save_dir: log/efficient1_416_SGD_final
 model:
   arch:
     name: OneStageDetector
@@ -15,12 +15,12 @@ model:
       start_level: 0
       num_outs: 3
     head:
-      name: ColanetHead  #or use GFLHead
+      name: GFLHeadV2  #or use GFLHead
       num_classes: 80
       input_channel: 128
       feat_channels: 128
       stacked_convs: 3
-      activation: SiLU
+      activation: ReLU6
       # silu(x)=x∗σ(x),where σ(x) is the logistic sigmoid.
       share_cls_reg: True
       octave_base_scale: 8
@@ -58,9 +58,13 @@ data:
       translate: 0.2
       flip: 0.5
       brightness: 0.2
-      contrast: [0.6, 1.4]
+      contrast: [0.5, 2.0]
       saturation: [0.5, 1.2]
       normalize: [[127.0, 127.0, 127.0], [128.0, 128.0, 128.0]]
+    load_mosaic: True
+    mosaic_probability: 0.3
+    mosaic_area: 9
+    mosaic_image_size: 416
   val:
     name: coco
     img_path: E:/coco17/val2017
@@ -82,19 +86,23 @@ schedule:
     name: SGD
     lr: 0.16  #0.1
     momentum: 0.9
-    #weight_decay: 0.00004
+    weight_decay: 0.0001
   warmup:
     name: linear
     steps: 510
     ratio: 0.01
-  total_epochs: 600
+  total_epochs: 150
   lr_schedule:
-    name: CosineAnnealingLR  
-    T_max: 30
-
-    #name:MultiStepLR
-    #milestones: [100,200,300,400]
-    #gamma: 0.1
+    name: ReduceLROnPlateau
+    mode: min
+    factor: 0.1
+    patience: 2 #15
+    verbose: True
+    threshold: 0.00001
+    threshold_mode: rel
+    cooldown: 0
+    min_lr: 0
+    eps: 0.000000001 #1e-08
 
   val_intervals: 5
 evaluator:
