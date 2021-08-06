@@ -19,7 +19,7 @@ import json
 import torch
 import logging
 from apex.contrib.sparsity import ASP
-from apex.optimizers import FusedAdam
+#from apex.optimizers import FusedAdam
 from pytorch_lightning import LightningModule
 from typing import Any, List
 from package.util import mkdir, gather_results
@@ -180,8 +180,6 @@ class TrainingTask(LightningModule):
         name = optimizer_cfg.pop('name')
         if name == 'AdaBound':
             optimizer = AdaBound(params=self.parameters(), **optimizer_cfg)
-        elif name == 'FusedAdam':
-            optimizer = FusedAdam(params=self.parameters(), **optimizer_cfg)
         else:
             build_optimizer = getattr(torch.optim, name)
             optimizer = build_optimizer(params=self.parameters(), **optimizer_cfg)

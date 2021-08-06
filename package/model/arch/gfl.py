@@ -1,7 +1,7 @@
-from .one_stage_detector import OneStage
+from .one_stage_detector import OneStageDetector
 
 
-class GFL(OneStage):
+class GFL(OneStageDetector):
     def __init__(self,
                  backbone_cfg,
                  fpn_cfg,
