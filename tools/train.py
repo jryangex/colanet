@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#version phase2 v2
 import argparse
 import os
 import datetime
@@ -22,7 +23,7 @@ import numpy as np
 import pytorch_lightning as pl
 import torch
 from pytorch_lightning.callbacks import ProgressBar
-#from pytorch_lightning.callbacks import ModelPruning
+from pytorch_lightning.callbacks import ModelPruning
 #from pytorch_lightning.callbacks import QuantizationAwareTraining
 #import torch.nn.utils.prune as prune
 
@@ -114,6 +115,7 @@ def main(args):
                          max_epochs=cfg.schedule.total_epochs,
                          gpus=cfg.device.gpu_ids,
                          check_val_every_n_epoch=cfg.schedule.val_intervals,
+                         accumulate_grad_batches=1,
                          accelerator='dp',
                          #amp_backend='apex', amp_level=cfg.device.amp_level,
                          precision=16,                        
@@ -121,15 +123,15 @@ def main(args):
                          num_sanity_val_steps=0,
                          resume_from_checkpoint=model_resume_path,
                          callbacks=[ProgressBar(refresh_rate=0),
-                                   # ModelPruning("l1_unstructured", amount=0.5, verbose=1),
+                                   # ModelPruning("l1_unstructured", amount=0.5,apply_pruning=True,  make_pruning_permanent=True, 
+                                      #           use_lottery_ticket_hypothesis=False,
+                                    #            verbose=1),
                                     ], 
                          benchmark=True
                          )
     
     trainer.fit(task, train_dataloader, val_dataloader)
-    logger.log("copy config")
-    #prune.remove(task, 'weight')
-   
+    
     listdir_info = os.listdir(os.path.join(cfg.save_dir,'lightning_logs'))
     existing_versions = []
     for listing in listdir_info:
@@ -142,10 +144,11 @@ def main(args):
                 existing_versions.append(0)
     strint = str('lightning_logs/version_'+ str(max(existing_versions)))
     newpath = os.path.join(cfg.save_dir,strint)
+    trainer.save_checkpoint(os.path.join(newpath,'model.ckpt'))
+    logger.log("copy config")
     shutil.copy(args.config, newpath)
     
-    input_sample = torch.randn((1, 3, cfg.data.train.input_size[0] , cfg.data.train.input_size[1]))
-    print(input_sample.size())
+    input_sample = torch.randn((1, 3, cfg.data.train.input_size[0] , cfg.data.train.input_size[1])) 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     inputs = task.to(device)
     summary(inputs, input_size=(3, cfg.data.train.input_size[0], cfg.data.train.input_size[1]),batch_size=cfg.device.batchsize_per_gpu)

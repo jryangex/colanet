@@ -3,11 +3,11 @@ import os
 import time
 import torch
 import argparse
-from ..package.util import cfg, load_config, Logger
-from ..package.model.arch import build_model
-from ..package.util import load_model_weight
-from ..package.data.transform import Pipeline
-from ..package.util.path import mkdir
+from package.util import cfg, load_config, Logger
+from package.model.arch import build_model
+from package.util import load_model_weight
+from package.data.transform import Pipeline
+from package.util.path import mkdir
 
 image_ext = ['.jpg', '.jpeg', '.webp', '.bmp', '.png']
 video_ext = ['mp4', 'mov', 'avi', 'mkv']
