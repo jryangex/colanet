@@ -1,6 +1,6 @@
 import warnings
 
-from .one_stage_detector import OneStageDetector
+from .gfl import GFL
 
 
 def build_model(model_cfg):
@@ -8,10 +8,8 @@ def build_model(model_cfg):
         warnings.warn("Model architecture name is changed to 'OneStageDetector'. "
                       "The name 'GFL' is deprecated, please change the model->arch->name "
                       "in your YAML config file to OneStageDetector. ")
-        model = OneStageDetector(model_cfg.arch.backbone, model_cfg.arch.fpn, model_cfg.arch.head)
-    elif model_cfg.arch.name == 'OneStageDetector':
-        print("build model one stage")
-        model = OneStageDetector(model_cfg.arch.backbone, model_cfg.arch.fpn, model_cfg.arch.head)
+        model = GFL(model_cfg.arch.backbone, model_cfg.arch.fpn, model_cfg.arch.head)
+
     else:
         raise NotImplementedError
     return model

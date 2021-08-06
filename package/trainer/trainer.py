@@ -52,6 +52,7 @@ class Trainer:
         """
         output, loss, loss_dict = model.module.forward_train(meta)
         loss = loss.mean()
+        loss.requires_grad_()
         if mode == 'train':
             self.optimizer.zero_grad()
             loss.backward()
@@ -79,6 +80,7 @@ class Trainer:
         epoch_losses = {}
         step_losses = {}
         num_iters = len(data_loader)
+        total_loss=0.0 
         for iter_id, meta in enumerate(data_loader):
             if iter_id >= num_iters:
                 break
@@ -105,9 +107,11 @@ class Trainer:
                 self.logger.log(log_msg)
             if mode == 'train':
                 self._iter += 1
+            total_loss+=loss.item()
             del output, loss, loss_stats
         epoch_loss_dict = {k: v.avg for k, v in epoch_losses.items()}
-        return results, epoch_loss_dict
+        total_loss=total_loss / num_iters
+        return results, epoch_loss_dict,total_loss
 
     def run(self, train_loader, val_loader, evaluator):
         """
@@ -133,8 +137,11 @@ class Trainer:
                 param_group['lr'] = lr
 
         for epoch in range(start_epoch, self.cfg.schedule.total_epochs + 1):
-            results, train_loss_dict = self.run_epoch(epoch, train_loader, mode='train')
-            self.lr_scheduler.step()
+            results, train_loss_dict ,total_loss= self.run_epoch(epoch, train_loader, mode='train')
+            if self.cfg.schedule.lr_schedule.name == 'ReduceLROnPlateau':
+                self.lr_scheduler.step(total_loss)
+            else:
+                self.lr_scheduler.step()
             save_model(self.rank, self.model, os.path.join(self.cfg.save_dir, 'model_last.pth'), epoch, self._iter, self.optimizer)
             for k, v in train_loss_dict.items():
                 self.logger.scalar_summary('Epoch_loss/' + k, 'train', v, epoch)
@@ -142,10 +149,10 @@ class Trainer:
             # --------evaluate----------
             if self.cfg.schedule.val_intervals > 0 and epoch % self.cfg.schedule.val_intervals == 0:
                 with torch.no_grad():
-                    results, val_loss_dict = self.run_epoch(self.epoch, val_loader, mode='val')
+                    results, val_loss_dict,_ = self.run_epoch(self.epoch, val_loader, mode='val')
                 for k, v in val_loss_dict.items():
                     self.logger.scalar_summary('Epoch_loss/' + k, 'val', v, epoch)
-                eval_results = evaluator.evaluate(results, self.cfg.save_dir, rank=self.rank)
+                eval_results = evaluator.evaluate(results, self.cfg.save_dir, epoch, self.logger, rank=self.rank)
                 for k, v in eval_results.items():
                     self.logger.scalar_summary('Val_metrics/' + k, 'val', v, epoch)
                 if self.cfg.evaluator.save_key in eval_results:
