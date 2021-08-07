@@ -18,7 +18,7 @@ import warnings
 import json
 import torch
 import logging
-from apex.contrib.sparsity import ASP
+#from apex.contrib.sparsity import ASP
 #from apex.optimizers import FusedAdam
 from pytorch_lightning import LightningModule
 from typing import Any, List
@@ -103,7 +103,7 @@ class TrainingTask(LightningModule):
             self.metrics=loss_states['loss_qfl'].mean().item()
             self.info(log_msg)
 
-        dets = self.model.head.post_process(preds, batch)
+        dets = self.model.head.post_process(preds, batch)  #bugs
         return dets
 
     def validation_epoch_end(self, validation_step_outputs):
@@ -193,7 +193,7 @@ class TrainingTask(LightningModule):
         #                 'frequency': 1}
         # return [optimizer], [lr_scheduler]
         
-        ASP.prune_trained_model(self.model, optimizer)
+        #ASP.prune_trained_model(self.model, optimizer)
         
         #self.info("Model sparsity is %s" % ("enabled" if ASP.sparsity_is_enabled() else "disabled"))
                   

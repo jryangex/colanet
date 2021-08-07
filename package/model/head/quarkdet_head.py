@@ -1,12 +1,15 @@
 import torch
 import torch.nn as nn
-from package.util import multi_apply
+
 from ..module.conv import ConvModule, DepthwiseConvModule
 from ..module.init_weights import normal_init
-from .gfl_head import GFLHead
+#from .gfl_head import GFLHead
 from .gfl_headv2 import GFLHeadV2
+from .gfl_head import GFLHead
+from .anchor.anchor_target import multi_apply
 
-class ColanetHead(GFLHeadV2):
+
+class QuarkDetHead(GFLHeadV2): # 可以直接将GFLHead替换成 GFLHeadV2
     """
     Modified from GFL, use same loss functions but much lightweight convolution heads
     """
@@ -17,25 +20,21 @@ class ColanetHead(GFLHeadV2):
                  input_channel,
                  stacked_convs=2,
                  octave_base_scale=5,
-                 conv_type='DWConv',
+                 scales_per_octave=1,
                  conv_cfg=None,
                  norm_cfg=dict(type='BN'),
                  reg_max=16,
                  share_cls_reg=False,
                  activation='LeakyReLU',
-                 feat_channels=256,
-                 strides=[8, 16, 32],
                  **kwargs):
         self.share_cls_reg = share_cls_reg
         self.activation = activation
-        self.ConvModule = ConvModule if conv_type == 'Conv' else DepthwiseConvModule
-        super(ColanetHead, self).__init__(num_classes,
+        super(QuarkDetHead, self).__init__(num_classes,
                                           loss,
                                           input_channel,
-                                          feat_channels,
                                           stacked_convs,
                                           octave_base_scale,
-                                          strides,
+                                          scales_per_octave,
                                           conv_cfg,
                                           norm_cfg,
                                           reg_max,
@@ -44,7 +43,7 @@ class ColanetHead(GFLHeadV2):
     def _init_layers(self):
         self.cls_convs = nn.ModuleList()
         self.reg_convs = nn.ModuleList()
-        for _ in self.strides:
+        for _ in self.anchor_strides:
             cls_convs, reg_convs = self._buid_not_shared_head()
             self.cls_convs.append(cls_convs)
             self.reg_convs.append(reg_convs)
@@ -53,30 +52,23 @@ class ColanetHead(GFLHeadV2):
                                                 self.cls_out_channels +
                                                 4 * (self.reg_max + 1) if self.share_cls_reg else self.cls_out_channels,
                                                 1,
-                                                padding=0) for _ in self.strides])
+                                                padding=0) for _ in self.anchor_strides])
         # TODO: if
         self.gfl_reg = nn.ModuleList([nn.Conv2d(self.feat_channels,
                                                 4 * (self.reg_max + 1),
                                                 1,
-                                                padding=0) for _ in self.strides])
+                                                padding=0) for _ in self.anchor_strides])
 
     def _buid_not_shared_head(self):
         cls_convs = nn.ModuleList()
         reg_convs = nn.ModuleList()
+        # print("cls_convs before:",cls_convs)
+        # print("reg_convs before:",reg_convs)
+        # print("self.stacked_convs:",self.stacked_convs)
         for i in range(self.stacked_convs):
             chn = self.in_channels if i == 0 else self.feat_channels
             cls_convs.append(
-                self.ConvModule(chn,
-                                self.feat_channels,
-                                3,
-                                stride=1,
-                                padding=1,
-                                norm_cfg=self.norm_cfg,
-                                bias=self.norm_cfg is None,
-                                activation=self.activation))
-            if not self.share_cls_reg:
-                reg_convs.append(
-                    self.ConvModule(chn,
+                DepthwiseConvModule(chn,
                                     self.feat_channels,
                                     3,
                                     stride=1,
@@ -84,21 +76,35 @@ class ColanetHead(GFLHeadV2):
                                     norm_cfg=self.norm_cfg,
                                     bias=self.norm_cfg is None,
                                     activation=self.activation))
-
+            if not self.share_cls_reg:
+                reg_convs.append(
+                    DepthwiseConvModule(chn,
+                                        self.feat_channels,
+                                        3,
+                                        stride=1,
+                                        padding=1,
+                                        norm_cfg=self.norm_cfg,
+                                        bias=self.norm_cfg is None,
+                                        activation=self.activation))
+                
+        # print("cls_convs after:",cls_convs)
+        # print("reg_convs after:",reg_convs)
         return cls_convs, reg_convs
 
     def init_weights(self):
-        for m in self.cls_convs.modules():
-            if isinstance(m, nn.Conv2d):
-                normal_init(m, std=0.01)
-        for m in self.reg_convs.modules():
-            if isinstance(m, nn.Conv2d):
-                normal_init(m, std=0.01)
-        bias_cls = -4.595
-        for i in range(len(self.strides)):
+        for seq in self.cls_convs:
+            for m in seq:
+                normal_init(m.depthwise, std=0.01)
+                normal_init(m.pointwise, std=0.01)
+        for seq in self.reg_convs:
+            for m in seq:
+                normal_init(m.depthwise, std=0.01)
+                normal_init(m.pointwise, std=0.01)
+        bias_cls = -4.595  # 用0.01的置信度初始化
+        for i in range(len(self.anchor_strides)):
             normal_init(self.gfl_cls[i], std=0.01, bias=bias_cls)
             normal_init(self.gfl_reg[i], std=0.01)
-        print('Finish initialize Lite GFL Head.')
+        print('Finish initialize Lite quarkdet Head.')
 
     def forward(self, feats):
         return multi_apply(self.forward_single,
@@ -118,12 +124,19 @@ class ColanetHead(GFLHeadV2):
             reg_feat = reg_conv(reg_feat)
         if self.share_cls_reg:
             feat = gfl_cls(cls_feat)
+            # print("feat:",feat.shape)
+            # print("cls_feat:",cls_feat.shape)
+            # print("self.cls_out_channels:",self.cls_out_channels)
             cls_score, bbox_pred = torch.split(feat, [self.cls_out_channels, 4 * (self.reg_max + 1)], dim=1)
+            # print("cls_score:",cls_score.shape)
+            # print("bbox_pred:",bbox_pred.shape)
         else:
             cls_score = gfl_cls(cls_feat)
             bbox_pred = gfl_reg(reg_feat)
 
         if torch.onnx.is_in_onnx_export():
             cls_score = torch.sigmoid(cls_score).reshape(1, self.num_classes, -1).permute(0, 2, 1)
-            bbox_pred = bbox_pred.reshape(1, (self.reg_max + 1) * 4, -1).permute(0, 2, 1)
+            bbox_pred = bbox_pred.reshape(1, (self.reg_max+1)*4, -1).permute(0, 2, 1)
         return cls_score, bbox_pred
+
+

@@ -1,4 +1,4 @@
-save_dir: log/efficient1_416_GFLv1
+save_dir: log/efficient1_416_GFLv2
 model:
   arch:
     name: GFL
@@ -11,22 +11,20 @@ model:
     fpn:
       name: PAN
       in_channels: [40, 112, 320]
-      out_channels: 128
+      out_channels: 112
       start_level: 0
       num_outs: 3
     head:
-      name: ColanetHead  #or use GFLHead
-      num_classes: 80
-      input_channel: 128
-      feat_channels: 128
-      stacked_convs: 3
-      activation: ReLU6
-      # silu(x)=x∗σ(x),where σ(x) is the logistic sigmoid.
-      share_cls_reg: True
-      octave_base_scale: 8
+      name: QuarkDetHead
+      num_classes: 80 # 80
+      input_channel: 112
+      feat_channels: 112
+      stacked_convs: 2
+      share_cls_reg: True #True
+      octave_base_scale: 5
       scales_per_octave: 1
       strides: [8, 16, 32]
-      reg_max: 10
+      reg_max: 7 #16 #7
       norm_cfg:
         type: BN
       loss:

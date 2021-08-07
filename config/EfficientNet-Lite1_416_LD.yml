@@ -1,4 +1,4 @@
-save_dir: log/efficient1_416_GFLv1
+save_dir: log/efficient1_416_SGD_GFLv2
 model:
   arch:
     name: GFL
@@ -15,14 +15,14 @@ model:
       start_level: 0
       num_outs: 3
     head:
-      name: ColanetHead  #or use GFLHead
+      name: LDGFLv2Head  #or use GFLHead
       num_classes: 80
       input_channel: 128
       feat_channels: 128
       stacked_convs: 3
-      activation: ReLU6
+      #activation: ReLU6
       # silu(x)=x∗σ(x),where σ(x) is the logistic sigmoid.
-      share_cls_reg: True
+      #share_cls_reg: True
       octave_base_scale: 8
       scales_per_octave: 1
       strides: [8, 16, 32]
@@ -36,11 +36,15 @@ model:
           beta: 2.0
           loss_weight: 1.0
         loss_dfl:
-          name: DistributionFocalLoss
+          name: LDLoss
           loss_weight: 0.25
+          T: 10 
+          alpha: 1
         loss_bbox:
           name: GIoULoss
           loss_weight: 2.0
+      teacher_config: 'config/'
+      teacher_model: 'gfl_r101_fpn_mstrain_2x_coco_20200629_200126-dd12f847.pth'
 data:
   train:
     name: coco
@@ -76,7 +80,7 @@ data:
 device:
   gpu_ids: [0]
   workers_per_gpu: 2
-  batchsize_per_gpu: 24
+  batchsize_per_gpu: 32
   amp_level: 'O3'
 
 schedule:

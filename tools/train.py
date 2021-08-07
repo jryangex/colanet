@@ -127,6 +127,7 @@ def main(args):
                                       #           use_lottery_ticket_hypothesis=False,
                                     #            verbose=1),
                                     ], 
+                         limit_train_batches=0.25,
                          benchmark=True
                          )
     

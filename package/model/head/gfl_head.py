@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch.distributed as dist
 import numpy as np
 import cv2
-from ...util import distance2bbox, bbox2distance, overlay_bbox_cv, multi_apply, images_to_levels
+from package.util import distance2bbox, bbox2distance, overlay_bbox_cv, multi_apply, images_to_levels
 from ..module.scale import Scale
 from ..module.conv import ConvModule
 from ..module.init_weights import normal_init

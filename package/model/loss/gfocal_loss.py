@@ -1,12 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from .utils import weighted_loss
 
 
 @weighted_loss
-def quality_focal_loss(pred, target, beta=2.0):
+def quality_focal_loss(pred, target, beta=2.0, use_sigmoid=True):
     r"""Quality Focal Loss (QFL) is from `Generalized Focal Loss: Learning
     Qualified and Distributed Bounding Boxes for Dense Object Detection
     <https://arxiv.org/abs/2006.04388>`_.
@@ -27,9 +26,13 @@ def quality_focal_loss(pred, target, beta=2.0):
         including category label and quality label, respectively"""
     # label denotes the category id, score denotes the quality score
     label, score = target
+    if use_sigmoid:
+        func = F.binary_cross_entropy_with_logits
+    else:
+        func = F.binary_cross_entropy
 
     # negatives are supervised by 0 quality score
-    pred_sigmoid = pred.sigmoid()
+    pred_sigmoid = pred.sigmoid() if use_sigmoid else pred
     scale_factor = pred_sigmoid
     zerolabel = scale_factor.new_zeros(pred.shape)
     loss = F.binary_cross_entropy_with_logits(
@@ -74,11 +77,18 @@ def distribution_focal_loss(pred, label):
     return loss
 
 
+@weighted_loss
+def ld_distribution_focal_loss(pred, label, soft_label, T):
+    ld_loss = F.kl_div(F.log_softmax(pred / T, dim=1), F.softmax(soft_label / T, dim=1).detach(),
+                       reduction='none').mean(1) * (T * T)
+
+    return ld_loss
+
+
 class QualityFocalLoss(nn.Module):
     r"""Quality Focal Loss (QFL) is a variant of `Generalized Focal Loss:
     Learning Qualified and Distributed Bounding Boxes for Dense Object
     Detection <https://arxiv.org/abs/2006.04388>`_.
-
     Args:
         use_sigmoid (bool): Whether sigmoid operation is conducted in QFL.
             Defaults to True.
@@ -94,7 +104,7 @@ class QualityFocalLoss(nn.Module):
                  reduction='mean',
                  loss_weight=1.0):
         super(QualityFocalLoss, self).__init__()
-        assert use_sigmoid is True, 'Only sigmoid in QFL supported now.'
+        #assert use_sigmoid is True, 'Only sigmoid in QFL supported now.'
         self.use_sigmoid = use_sigmoid
         self.beta = beta
         self.reduction = reduction
@@ -123,18 +133,14 @@ class QualityFocalLoss(nn.Module):
                 Defaults to None.
         """
         assert reduction_override in (None, 'none', 'mean', 'sum')
-        reduction = (
-            reduction_override if reduction_override else self.reduction)
-        if self.use_sigmoid:
-            loss_cls = self.loss_weight * quality_focal_loss(
-                pred,
-                target,
-                weight,
-                beta=self.beta,
-                reduction=reduction,
-                avg_factor=avg_factor)
-        else:
-            raise NotImplementedError
+        reduction = (reduction_override if reduction_override else self.reduction)
+        loss_cls = self.loss_weight * quality_focal_loss(pred,
+                                                         target,
+                                                         weight,
+                                                         beta=self.beta,
+                                                         use_sigmoid=self.use_sigmoid,
+                                                         reduction=reduction,
+                                                         avg_factor=avg_factor)
         return loss_cls
 
 
@@ -176,8 +182,53 @@ class DistributionFocalLoss(nn.Module):
                 Defaults to None.
         """
         assert reduction_override in (None, 'none', 'mean', 'sum')
-        reduction = (
-            reduction_override if reduction_override else self.reduction)
+        reduction = (reduction_override if reduction_override else self.reduction)
         loss_cls = self.loss_weight * distribution_focal_loss(
             pred, target, weight, reduction=reduction, avg_factor=avg_factor)
         return loss_cls
+class LDLoss(nn.Module):
+    r"""Distribution Focal Loss (DFL) is a variant of `Generalized Focal Loss:
+    Learning Qualified and Distributed Bounding Boxes for Dense Object
+    Detection <https://arxiv.org/abs/2006.04388>`_.
+
+    Args:
+        reduction (str): Options are `'none'`, `'mean'` and `'sum'`.
+        loss_weight (float): Loss weight of current loss.
+    """
+    def __init__(self, reduction='mean', loss_weight=1.0, T=2, alpha=1, beta=1):
+        super(LDLoss, self).__init__()
+        self.reduction = reduction
+        self.loss_weight = loss_weight
+
+        self.T = T
+        self.alpha = alpha
+        self.adjust = False
+        self.beta = beta
+
+    def forward(self, pred, target, soft_corners, weight=None, avg_factor=None, reduction_override=None):
+        """Forward function.
+
+        Args:
+            pred (torch.Tensor): Predicted general distribution of bounding
+                boxes (before softmax) with shape (N, n+1), n is the max value
+                of the integral set `{0, ..., n}` in paper.
+            target (torch.Tensor): Target distance label for bounding boxes
+                with shape (N,).
+            weight (torch.Tensor, optional): The weight of loss for each
+                prediction. Defaults to None.
+            avg_factor (int, optional): Average factor that is used to average
+                the loss. Defaults to None.
+            reduction_override (str, optional): The reduction method used to
+                override the original reduction method of the loss.
+                Defaults to None.
+        """
+        assert reduction_override in (None, 'none', 'mean', 'sum')
+
+        reduction = (reduction_override if reduction_override else self.reduction)
+
+        loss_ld = self.loss_weight * ld_distribution_focal_loss(
+            pred, target, weight, reduction=reduction, avg_factor=avg_factor, soft_label=soft_corners, T=self.T)
+        loss_cls = self.loss_weight * distribution_focal_loss(
+            pred, target, weight, reduction=reduction, avg_factor=avg_factor)
+        return self.beta * loss_cls, self.alpha * loss_ld
+    
